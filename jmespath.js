@@ -1122,6 +1122,8 @@
 
   };
 
+  var external_functions = {};
+
   function Runtime(interpreter) {
     this._interpreter = interpreter;
     this.functionTable = {
@@ -1145,6 +1147,19 @@
             _func: this._functionContains,
             _signature: [{types: [TYPE_STRING, TYPE_ARRAY]},
                         {types: [TYPE_ANY]}]},
+        object_keys_match_any: {
+            _func: this._functionObjectKeysMatchAny,
+            _signature: [{
+                    types: [TYPE_OBJECT]
+                },
+                {
+                    types: [TYPE_STRING]
+                },
+                {
+                    types: [TYPE_ANY]
+                }
+            ]
+        },
         "ends_with": {
             _func: this._functionEndsWith,
             _signature: [{types: [TYPE_STRING]}, {types: [TYPE_STRING]}]},
@@ -1366,6 +1381,14 @@
 
     _functionContains: function(resolvedArgs) {
         return resolvedArgs[0].indexOf(resolvedArgs[1]) >= 0;
+    },
+
+    _functionObjectKeysMatchAny: function(resolvedArgs) {
+        if (!this.object_keys_match_any) {
+            this.object_keys_match_any = external_functions["create_object_keys_match_any"](resolvedArgs[0], resolvedArgs[1], resolvedArgs[2]);
+
+        }
+        return this.object_keys_match_any(resolvedArgs[0], resolvedArgs[1], resolvedArgs[2]);
     },
 
     _functionFloor: function(resolvedArgs) {
@@ -1665,6 +1688,11 @@
       return interpreter.search(node, data);
   }
 
+    function init_external_functions(external_function_map) {
+        external_functions = external_function_map;
+    }
+
+  exports.init_external_functions = init_external_functions;
   exports.tokenize = tokenize;
   exports.compile = compile;
   exports.search = search;
